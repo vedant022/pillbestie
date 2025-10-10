@@ -12,6 +12,7 @@ import com.example.pillbestie.ui.home.HomeViewModel
 import com.example.pillbestie.ui.journal.AddEditJournalViewModel
 import com.example.pillbestie.ui.journal.JournalViewModel
 import com.example.pillbestie.ui.medicine.AddMedicineViewModel
+import com.example.pillbestie.ui.medicine.EditMedicineViewModel
 import com.example.pillbestie.ui.scan.ScanPillViewModel
 import com.example.pillbestie.ui.settings.SettingsViewModel
 import com.example.pillbestie.ui.voice.VoiceChatViewModel
@@ -21,6 +22,10 @@ class ViewModelFactory(private val context: Context) : ViewModelProvider.Factory
         if (modelClass.isAssignableFrom(AddMedicineViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
             return AddMedicineViewModel(Injection.provideMedicineRepository(context), SettingsRepository(context)) as T
+        }
+        if (modelClass.isAssignableFrom(EditMedicineViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return EditMedicineViewModel(Injection.provideMedicineRepository(context)) as T
         }
         if (modelClass.isAssignableFrom(HomeViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
