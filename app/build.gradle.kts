@@ -2,11 +2,12 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.kapt")
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.22"
 }
 
 android {
     namespace = "com.example.pillbestie"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.pillbestie"
@@ -58,9 +59,11 @@ dependencies {
     val room_version = "2.6.1"
     val work_version = "2.9.0"
     val accompanist_version = "0.32.0"
+    val coil_version = "2.5.0"
+    val ktor_version = "2.3.9"
 
     // Core & UI
-    implementation("androidx.core:core-ktx:1.13.1")
+    implementation(libs.androidx.core.ktx)
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.activity:activity-compose:1.9.0")
     implementation(platform("androidx.compose:compose-bom:2024.05.00"))
@@ -84,4 +87,13 @@ dependencies {
 
     // Accompanist
     implementation("com.google.accompanist:accompanist-permissions:$accompanist_version")
+
+    // Coil
+    implementation("io.coil-kt:coil-compose:$coil_version")
+
+    // Ktor
+    implementation("io.ktor:ktor-client-core:$ktor_version")
+    implementation("io.ktor:ktor-client-android:$ktor_version")
+    implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
 }

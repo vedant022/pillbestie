@@ -5,11 +5,11 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [Medicine::class, DoseLog::class, MoodEntry::class], version = 4)
+@Database(entities = [Medicine::class, DoseLog::class, JournalEntry::class], version = 10)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun medicineDao(): MedicineDao
     abstract fun doseLogDao(): DoseLogDao
-    abstract fun moodEntryDao(): MoodEntryDao
+    abstract fun journalEntryDao(): JournalEntryDao
 
     companion object {
         @Volatile

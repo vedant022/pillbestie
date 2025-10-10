@@ -28,8 +28,6 @@ class MissedDoseAnalysisService : Service() {
                 val missedDoses = doseLogs.filter { it.wasMissed }
 
                 if (missedDoses.size > 3) { // Simple threshold
-                    // Simple AI: If the user misses a dose more than 3 times,
-                    // schedule an extra reminder 30 minutes before the scheduled time.
                     val earlyReminderTime = medicine.timeInMillis - (30 * 60 * 1000)
                     scheduler.scheduleNotification(
                         title = "Upcoming Dose: ${medicine.name}",

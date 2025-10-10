@@ -1,5 +1,7 @@
 package com.example.pillbestie.ui.settings
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.selectable
@@ -32,6 +34,7 @@ fun SettingsScreen(
     val profileName by viewModel.profileName.collectAsState()
     val reminderFrequency by viewModel.reminderFrequency.collectAsState()
     val vibrationEnabled by viewModel.vibrationEnabled.collectAsState()
+    val drugInteractionCheckEnabled by viewModel.drugInteractionCheckEnabled.collectAsState()
 
     Scaffold(
         topBar = {
@@ -55,6 +58,8 @@ fun SettingsScreen(
             item { ProfileSection(profileName, viewModel::setProfileName) }
             item { PersonalitySection(personality, viewModel::setPersonality) }
             item { NotificationSettingsSection(reminderFrequency, viewModel::setReminderFrequency, vibrationEnabled, viewModel::setVibrationEnabled) }
+            item { SafetySettingsSection(drugInteractionCheckEnabled, viewModel::setDrugInteractionCheckEnabled) }
+            item { DataManagementSection(viewModel) }
         }
     }
 }
@@ -174,6 +179,85 @@ fun NotificationSettingsSection(
                     )
                 }
             )
+        }
+    }
+}
+
+@Composable
+fun SafetySettingsSection(
+    drugInteractionCheckEnabled: Boolean,
+    onDrugInteractionCheckEnabledChange: (Boolean) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("Safety Features", style = MaterialTheme.typography.titleLarge)
+            Spacer(Modifier.height(16.dp))
+            ListItem(
+                headlineContent = { Text("Drug Interaction Checker") },
+                supportingContent = { Text("Check for potential drug interactions when adding a new medicine.") },
+                trailingContent = {
+                    Switch(
+                        checked = drugInteractionCheckEnabled,
+                        onCheckedChange = onDrugInteractionCheckEnabledChange,
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = MaterialTheme.colorScheme.primary,
+                            uncheckedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    )
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun DataManagementSection(viewModel: SettingsViewModel) {
+    val context = LocalContext.current
+
+    val backupLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/octet-stream"),
+        onResult = { uri ->
+            uri?.let { viewModel.backupData(context, it) }
+        }
+    )
+
+    val restoreLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+        onResult = { uri ->
+            uri?.let { viewModel.restoreData(context, it) }
+        }
+    )
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/csv"),
+        onResult = { uri ->
+            uri?.let { viewModel.exportDataToCsv(context, it) }
+        }
+    )
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("Data Management", style = MaterialTheme.typography.titleLarge)
+            Spacer(Modifier.height(16.dp))
+            Button(onClick = { backupLauncher.launch("pillbestie_backup.db") }) {
+                Text("Backup Data")
+            }
+            Spacer(Modifier.height(8.dp))
+            Button(onClick = { restoreLauncher.launch(arrayOf("application/octet-stream")) }) {
+                Text("Restore Data")
+            }
+            Spacer(Modifier.height(8.dp))
+            Button(onClick = { exportLauncher.launch("pillbestie_export.csv") }) {
+                Text("Export to CSV")
+            }
         }
     }
 }

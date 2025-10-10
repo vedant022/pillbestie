@@ -2,12 +2,25 @@ package com.example.pillbestie.data
 
 import kotlinx.coroutines.flow.Flow
 
-class MedicineRepository(private val medicineDao: MedicineDao, private val doseLogDao: DoseLogDao, private val moodEntryDao: MoodEntryDao) {
+class MedicineRepository(private val medicineDao: MedicineDao, private val doseLogDao: DoseLogDao, private val journalEntryDao: JournalEntryDao) {
     val allMedicines: Flow<List<Medicine>> = medicineDao.getAllMedicines()
-    val allMoodEntries: Flow<List<MoodEntry>> = moodEntryDao.getAllMoodEntries()
+    val allJournalEntries: Flow<List<JournalEntry>> = journalEntryDao.getAllEntries()
+    val allDoseLogs: Flow<List<DoseLog>> = doseLogDao.getAllDoseLogs()
 
     suspend fun insert(medicine: Medicine) {
         medicineDao.insert(medicine)
+    }
+
+    suspend fun updateMedicine(medicine: Medicine) {
+        medicineDao.update(medicine)
+    }
+
+    suspend fun delete(medicine: Medicine) {
+        medicineDao.delete(medicine)
+    }
+
+    fun getMedicine(medicineId: Int): Flow<Medicine> {
+        return medicineDao.getMedicine(medicineId)
     }
 
     fun getDoseLogsForMedicine(medicineId: Int): Flow<List<DoseLog>> {
@@ -18,8 +31,12 @@ class MedicineRepository(private val medicineDao: MedicineDao, private val doseL
         doseLogDao.insert(doseLog)
     }
 
-    suspend fun insert(moodEntry: MoodEntry) {
-        moodEntryDao.insert(moodEntry)
+    suspend fun updateDoseLog(doseLog: DoseLog) {
+        doseLogDao.update(doseLog)
+    }
+
+    suspend fun insert(journalEntry: JournalEntry) {
+        journalEntryDao.insert(journalEntry)
     }
 
     suspend fun isImageHashUnique(imageHash: String): Boolean {

@@ -23,10 +23,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.pillbestie.AppRoutes
-import com.example.pillbestie.data.Injection
-import com.example.pillbestie.data.Medicine
-import com.example.pillbestie.data.Personality
-import com.example.pillbestie.data.TakenAction
+import com.example.pillbestie.data.*
 import com.example.pillbestie.ui.ViewModelFactory
 import com.example.pillbestie.ui.theme.PillBestieTheme
 import java.text.SimpleDateFormat
@@ -39,8 +36,21 @@ fun HomeScreen(
 ) {
     val medicines by viewModel.medicines.collectAsState()
     val takenAction by viewModel.takenAction.collectAsState()
-    val personality by viewModel.personality.collectAsState()
-    val profileName by viewModel.profileName.collectAsState()
+    val greeting by viewModel.greeting.collectAsState()
+    val affirmation by viewModel.affirmation.collectAsState()
+
+    affirmation?.let {
+        AlertDialog(
+            onDismissRequest = { viewModel.clearAffirmation() },
+            title = { Text("Pill Bestie says...") },
+            text = { Text(it, style = MaterialTheme.typography.headlineMedium) },
+            confirmButton = {
+                Button(onClick = { viewModel.clearAffirmation() }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -49,7 +59,7 @@ fun HomeScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            Header(personality, profileName)
+            Header(greeting)
         }
         item {
             ActionButtons(navController)
@@ -57,24 +67,19 @@ fun HomeScreen(
         item {
             Text("Today's Pills", style = MaterialTheme.typography.headlineMedium)
         }
-        items(medicines) { medicine ->
+        items(medicines) { medicineData ->
             MedicineCard(
-                medicine = medicine,
+                medicineData = medicineData,
                 takenAction = takenAction,
-                onMarkAsTaken = { viewModel.markDoseAsTaken(medicine) },
-                onScanPill = { navController.navigate("${AppRoutes.SCAN_PILL}/${medicine.id}") }
+                onMarkAsTaken = { viewModel.markDoseAsTaken(medicineData.medicine) },
+                onScanPill = { navController.navigate("${AppRoutes.SCAN_PILL}/${medicineData.medicine.id}") }
             )
         }
     }
 }
 
 @Composable
-fun Header(personality: Personality, name: String) {
-    val greeting = when (personality) {
-        Personality.CARING -> if (name.isNotBlank()) "Hey, $name! ✨" else "Hey, bestie! ✨"
-        Personality.SARCASTIC -> if (name.isNotBlank()) "Oh, it's $name. Try not to forget your pills..." else "Oh, it's you. Try not to forget your pills..."
-        Personality.CHAOTIC -> if (name.isNotBlank()) "Alright, $name, let's do this! PILL TIME!" else "Alright, bestie, let's do this! PILL TIME!"
-    }
+fun Header(greeting: String) {
     Text(greeting, style = MaterialTheme.typography.headlineLarge)
 }
 
@@ -89,12 +94,6 @@ fun ActionButtons(navController: NavController) {
             icon = Icons.Default.Add,
             modifier = Modifier.weight(1f),
             onClick = { navController.navigate(AppRoutes.ADD_MEDICINE) }
-        )
-        ActionButton(
-            text = "Scan Pill",
-            icon = Icons.Default.PhotoCamera,
-            modifier = Modifier.weight(1f),
-            onClick = { navController.navigate(AppRoutes.SCAN_PILL) }
         )
         ActionButton(
             text = "Voice Chat",
@@ -136,13 +135,13 @@ fun ActionButton(
 
 @Composable
 fun MedicineCard(
-    medicine: Medicine,
+    medicineData: MedicineUIData,
     takenAction: TakenAction,
     onMarkAsTaken: () -> Unit,
     onScanPill: () -> Unit
 ) {
     val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
-    val time = timeFormat.format(Date(medicine.timeInMillis))
+    val time = timeFormat.format(Date(medicineData.medicine.timeInMillis))
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -150,24 +149,28 @@ fun MedicineCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         ListItem(
-            headlineContent = { Text(medicine.name, style = MaterialTheme.typography.titleLarge) },
-            supportingContent = { Text("${medicine.dosage} - $time", style = MaterialTheme.typography.bodyLarge) },
+            headlineContent = { Text(medicineData.medicine.name, style = MaterialTheme.typography.titleLarge) },
+            supportingContent = { Text("${medicineData.medicine.dosage} - $time", style = MaterialTheme.typography.bodyLarge) },
             trailingContent = {
-                when (takenAction) {
-                    TakenAction.QUICK_TAP -> {
-                        Button(
-                            onClick = onMarkAsTaken,
-                            shape = MaterialTheme.shapes.small,
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                        ) {
-                            Icon(Icons.Default.Check, contentDescription = "Mark as taken")
-                            Spacer(Modifier.width(4.dp))
-                            Text("Taken")
+                if (medicineData.isTakenToday) {
+                    Text("✓ Taken", color = MaterialTheme.colorScheme.primary)
+                } else {
+                    when (takenAction) {
+                        TakenAction.QUICK_TAP -> {
+                            Button(
+                                onClick = onMarkAsTaken,
+                                shape = MaterialTheme.shapes.small,
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                            ) {
+                                Icon(Icons.Default.Check, contentDescription = "Mark as taken")
+                                Spacer(Modifier.width(4.dp))
+                                Text("Taken")
+                            }
                         }
-                    }
-                    TakenAction.PHOTO_MODE -> {
-                        IconButton(onClick = onScanPill) {
-                            Icon(Icons.Default.PhotoCamera, contentDescription = "Scan pill", tint = MaterialTheme.colorScheme.primary)
+                        TakenAction.PHOTO_MODE -> {
+                            IconButton(onClick = onScanPill) {
+                                Icon(Icons.Default.PhotoCamera, contentDescription = "Scan pill", tint = MaterialTheme.colorScheme.primary)
+                            }
                         }
                     }
                 }

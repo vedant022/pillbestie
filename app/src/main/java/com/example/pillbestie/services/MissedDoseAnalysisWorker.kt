@@ -21,14 +21,29 @@ class MissedDoseAnalysisWorker(appContext: Context, workerParams: WorkerParamete
             val medicines = repository.allMedicines.first()
             for (medicine in medicines) {
                 val doseLogs = repository.getDoseLogsForMedicine(medicine.id).first()
-                val missedDoses = doseLogs.filter { it.wasMissed }
+                val recentDose = doseLogs.maxByOrNull { it.scheduledTime }
 
-                if (missedDoses.size > 3) { // Simple threshold
+                if (recentDose != null && recentDose.status != "TAKEN" && System.currentTimeMillis() - recentDose.scheduledTime > 2 * 60 * 60 * 1000) {
+                    val missedDoseLog = recentDose.copy(
+                        wasMissed = true,
+                        status = "MISSED"
+                    )
+                    repository.updateDoseLog(missedDoseLog)
+
+                    scheduler.scheduleNotification(
+                        title = "Missed Dose: ${medicine.name}",
+                        message = "It\'s too late to take your dose. It has been logged as missed.",
+                        timeInMillis = System.currentTimeMillis()
+                    )
+                }
+
+                val missedDoses = doseLogs.filter { it.wasMissed }
+                if (missedDoses.size > 3) {
                     for (i in 1..reminderFrequency) {
                         val earlyReminderTime = medicine.timeInMillis - (i * 30 * 60 * 1000)
                         scheduler.scheduleNotification(
                             title = "Upcoming Dose: ${medicine.name}",
-                            message = "Don't forget to take your ${medicine.dosage} soon!",
+                            message = "Don\'t forget to take your ${medicine.dosage} soon!",
                             timeInMillis = earlyReminderTime
                         )
                     }

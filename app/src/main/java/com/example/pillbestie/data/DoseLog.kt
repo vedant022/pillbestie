@@ -10,5 +10,6 @@ data class DoseLog(
     val scheduledTime: Long,
     val takenTime: Long? = null,
     val wasMissed: Boolean,
-    val imageHash: String? = null
+    val imageHash: String? = null,
+    val status: String = "TAKEN" // Default to TAKEN for existing logs
 )

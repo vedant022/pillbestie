@@ -16,6 +16,7 @@ class SettingsRepository(private val context: Context) {
     private val profileNameKey = stringPreferencesKey("profile_name")
     private val reminderFrequencyKey = intPreferencesKey("reminder_frequency")
     private val vibrationEnabledKey = booleanPreferencesKey("vibration_enabled")
+    private val drugInteractionCheckKey = booleanPreferencesKey("drug_interaction_check_enabled")
 
     val takenAction: Flow<TakenAction> = context.dataStore.data.map {
         TakenAction.valueOf(it[takenActionKey] ?: TakenAction.QUICK_TAP.name)
@@ -55,6 +56,14 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setVibrationEnabled(enabled: Boolean) {
         context.dataStore.edit { it[vibrationEnabledKey] = enabled }
+    }
+
+    val drugInteractionCheckEnabled: Flow<Boolean> = context.dataStore.data.map {
+        it[drugInteractionCheckKey] ?: true // Enabled by default
+    }
+
+    suspend fun setDrugInteractionCheckEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[drugInteractionCheckKey] = enabled }
     }
 }
 

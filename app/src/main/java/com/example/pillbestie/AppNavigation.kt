@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.pillbestie.ui.analytics.AnalyticsScreen
 import com.example.pillbestie.ui.home.HomeScreen
+import com.example.pillbestie.ui.journal.AddEditJournalScreen
 import com.example.pillbestie.ui.journal.JournalScreen
 import com.example.pillbestie.ui.medicine.AddMedicineScreen
 import com.example.pillbestie.ui.scan.ScanPillScreen
@@ -21,6 +22,7 @@ object AppRoutes {
     const val SCAN_PILL = "scan_pill"
     const val VOICE_CHAT = "voice_chat"
     const val JOURNAL = "journal"
+    const val ADD_EDIT_JOURNAL = "add_edit_journal"
     const val SETTINGS = "settings"
     const val ANALYTICS = "analytics"
 }
@@ -46,6 +48,9 @@ fun AppNavigation(navController: NavHostController, modifier: Modifier = Modifie
         }
         composable(AppRoutes.JOURNAL) {
             JournalScreen(navController = navController)
+        }
+        composable(AppRoutes.ADD_EDIT_JOURNAL) {
+            AddEditJournalScreen(navController = navController)
         }
         composable(AppRoutes.SETTINGS) {
             SettingsScreen(navController = navController)
