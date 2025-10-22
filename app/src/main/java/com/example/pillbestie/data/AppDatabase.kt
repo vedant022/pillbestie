@@ -4,12 +4,13 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 
-@Database(entities = [Medicine::class, DoseLog::class, JournalEntry::class], version = 10)
+@Database(entities = [Medicine::class, DoseLog::class], version = 2, exportSchema = false)
+@TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun medicineDao(): MedicineDao
     abstract fun doseLogDao(): DoseLogDao
-    abstract fun journalEntryDao(): JournalEntryDao
 
     companion object {
         @Volatile

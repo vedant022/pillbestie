@@ -3,6 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.kapt")
     id("org.jetbrains.kotlin.plugin.serialization") version "1.9.22"
+    id("kotlin-parcelize")
 }
 
 android {
@@ -33,11 +34,11 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
@@ -55,15 +56,22 @@ android {
     }
 }
 
+kapt {
+    arguments {
+        arg("java.io.tmpdir", project.buildDir.resolve("tmp").absolutePath)
+    }
+}
+
 dependencies {
     val room_version = "2.6.1"
     val work_version = "2.9.0"
     val accompanist_version = "0.32.0"
     val coil_version = "2.5.0"
     val ktor_version = "2.3.9"
+    val gson_version = "2.10.1"
 
     // Core & UI
-    implementation(libs.androidx.core.ktx)
+    implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.activity:activity-compose:1.9.0")
     implementation(platform("androidx.compose:compose-bom:2024.05.00"))
@@ -78,6 +86,7 @@ dependencies {
     implementation("androidx.room:room-runtime:$room_version")
     implementation("androidx.room:room-ktx:$room_version")
     kapt("androidx.room:room-compiler:$room_version")
+    kapt("org.xerial:sqlite-jdbc:3.45.1.0")
 
     // DataStore
     implementation("androidx.datastore:datastore-preferences:1.1.1")
@@ -96,4 +105,10 @@ dependencies {
     implementation("io.ktor:ktor-client-android:$ktor_version")
     implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
+
+    // Gson
+    implementation("com.google.code.gson:gson:$gson_version")
+    
+    // Wheel Style Time Picker
+    implementation("com.github.ozcanalasalvar:picker:1.0.1")
 }

@@ -81,13 +81,14 @@ fun VoiceChatScreen(
                 modifier = Modifier
                     .weight(1f)
                     .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                reverseLayout = true
             ) {
-                items(uiState.conversation) { message ->
+                items(uiState.conversation.reversed()) { message ->
                     Text(message)
                 }
             }
-            if (uiState.isListening) {
+            if (uiState.isListening || uiState.isSpeaking) {
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             }
         }

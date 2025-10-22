@@ -5,6 +5,7 @@ import android.speech.tts.TextToSpeech
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pillbestie.data.*
+import com.example.pillbestie.notifications.NotificationScheduler
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -13,6 +14,7 @@ import java.util.Locale
 class HomeViewModel(
     private val medicineRepository: MedicineRepository,
     private val settingsRepository: SettingsRepository,
+    private val notificationScheduler: NotificationScheduler,
     application: Application
 ) : ViewModel(), TextToSpeech.OnInitListener {
 
@@ -68,14 +70,74 @@ class HomeViewModel(
 
     fun markDoseAsTaken(medicine: Medicine) {
         viewModelScope.launch {
+            val scheduledTime = medicine.times.firstOrNull() ?: System.currentTimeMillis()
             val doseLog = DoseLog(
                 medicineId = medicine.id,
-                scheduledTime = medicine.timeInMillis,
+                scheduledTime = scheduledTime,
                 takenTime = System.currentTimeMillis(),
                 wasMissed = false
             )
             medicineRepository.insert(doseLog)
             triggerAffirmation()
+
+            // Decrement pill count and check for refill reminder
+            medicine.pillsRemaining?.let { currentPills ->
+                val dosageAmount = medicine.dosage.toIntOrNull() ?: 1
+                val newPillCount = currentPills - dosageAmount
+
+                val updatedMedicine = medicine.copy(pillsRemaining = newPillCount)
+                medicineRepository.updateMedicine(updatedMedicine)
+
+                // Check if a refill reminder is needed
+                medicine.remindBeforeDays?.let { remindDays ->
+                    if (newPillCount <= (remindDays * medicine.timesPerDay)) {
+                        notificationScheduler.scheduleSimpleNotification(
+                            title = "Refill Reminder",
+                            message = "You are running low on ${medicine.name}. You have approximately $newPillCount pills left.",
+                            notificationId = medicine.id + 2000 // Unique ID for refill notifications
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+   fun snoozeDose(medicine: Medicine) {
+        viewModelScope.launch {
+            val nextDose = medicineRepository.getNextUpcomingMedicine(medicine.id)
+            if (nextDose != null) {
+                // Cancel the original alarm
+                notificationScheduler.cancel(nextDose)
+
+                // Schedule the snoozed alarm
+                val snoozeTime = System.currentTimeMillis() + 15 * 60 * 1000 // 15 minutes
+                val snoozedMedicine = nextDose.copy(times = listOf(snoozeTime))
+                notificationScheduler.schedule(snoozedMedicine)
+            }
+        }
+    }
+
+    fun skipDose(medicine: Medicine) {
+        viewModelScope.launch {
+            val nextDose = medicineRepository.getNextUpcomingMedicine(medicine.id)
+            if (nextDose != null) {
+                val doseLog = DoseLog(
+                    medicineId = nextDose.id,
+                    scheduledTime = nextDose.times.first(),
+                    status = "SKIPPED",
+                    wasMissed = true,
+                    takenTime = 0 // This was missing
+                )
+                medicineRepository.insert(doseLog)
+                // Cancel the alarm for the skipped dose
+                notificationScheduler.cancel(nextDose)
+            }
+        }
+    }
+
+    fun deleteMedicine(medicine: Medicine) {
+        viewModelScope.launch {
+            medicineRepository.delete(medicine)
         }
     }
 

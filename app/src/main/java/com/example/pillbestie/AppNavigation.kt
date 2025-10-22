@@ -12,6 +12,8 @@ import com.example.pillbestie.ui.home.HomeScreen
 import com.example.pillbestie.ui.journal.AddEditJournalScreen
 import com.example.pillbestie.ui.journal.JournalScreen
 import com.example.pillbestie.ui.medicine.AddMedicineScreen
+import com.example.pillbestie.ui.medicine.EditMedicineScreen
+import com.example.pillbestie.ui.medicine.MedicineDetailScreen
 import com.example.pillbestie.ui.scan.ScanPillScreen
 import com.example.pillbestie.ui.settings.SettingsScreen
 import com.example.pillbestie.ui.voice.VoiceChatScreen
@@ -25,6 +27,8 @@ object AppRoutes {
     const val ADD_EDIT_JOURNAL = "add_edit_journal"
     const val SETTINGS = "settings"
     const val ANALYTICS = "analytics"
+    const val MEDICINE_DETAIL = "medicine_detail"
+    const val EDIT_MEDICINE = "edit_medicine"
 }
 
 @Composable
@@ -57,6 +61,20 @@ fun AppNavigation(navController: NavHostController, modifier: Modifier = Modifie
         }
         composable(AppRoutes.ANALYTICS) {
             AnalyticsScreen()
+        }
+        composable(
+            route = "${AppRoutes.MEDICINE_DETAIL}/{medicineId}",
+            arguments = listOf(navArgument("medicineId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val medicineId = backStackEntry.arguments?.getInt("medicineId") ?: 0
+            MedicineDetailScreen(navController = navController, medicineId = medicineId)
+        }
+        composable(
+            route = "${AppRoutes.EDIT_MEDICINE}/{medicineId}",
+            arguments = listOf(navArgument("medicineId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val medicineId = backStackEntry.arguments?.getInt("medicineId") ?: 0
+            EditMedicineScreen(navController = navController, medicineId = medicineId)
         }
     }
 }

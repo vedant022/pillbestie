@@ -24,7 +24,6 @@ import com.example.pillbestie.ui.theme.PillBestieTheme
 @Composable
 fun ScanPillScreen(navController: NavController, medicineId: Int, viewModel: ScanPillViewModel = viewModel(factory = ViewModelFactory(LocalContext.current))) {
     val uiState by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
 
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()

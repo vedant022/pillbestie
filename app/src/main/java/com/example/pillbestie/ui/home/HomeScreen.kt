@@ -1,13 +1,11 @@
 package com.example.pillbestie.ui.home
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -72,7 +70,10 @@ fun HomeScreen(
                 medicineData = medicineData,
                 takenAction = takenAction,
                 onMarkAsTaken = { viewModel.markDoseAsTaken(medicineData.medicine) },
-                onScanPill = { navController.navigate("${AppRoutes.SCAN_PILL}/${medicineData.medicine.id}") }
+                onSnooze = { viewModel.snoozeDose(medicineData.medicine) },
+                onSkip = { viewModel.skipDose(medicineData.medicine) },
+                onScanPill = { navController.navigate("${AppRoutes.SCAN_PILL}/${medicineData.medicine.id}") },
+                onCardClick = { navController.navigate("${AppRoutes.MEDICINE_DETAIL}/${medicineData.medicine.id}") }
             )
         }
     }
@@ -138,39 +139,63 @@ fun MedicineCard(
     medicineData: MedicineUIData,
     takenAction: TakenAction,
     onMarkAsTaken: () -> Unit,
-    onScanPill: () -> Unit
+    onSnooze: () -> Unit,
+    onSkip: () -> Unit,
+    onScanPill: () -> Unit,
+    onCardClick: () -> Unit
 ) {
     val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
-    val time = timeFormat.format(Date(medicineData.medicine.timeInMillis))
+    val timeStrings = medicineData.medicine.times.map { timeFormat.format(Date(it)) }
+    val timeText = timeStrings.joinToString(", ")
+
+    val pillsLeftText = medicineData.medicine.pillsRemaining?.let { "$it pills left" } ?: ""
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onCardClick),
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         ListItem(
             headlineContent = { Text(medicineData.medicine.name, style = MaterialTheme.typography.titleLarge) },
-            supportingContent = { Text("${medicineData.medicine.dosage} - $time", style = MaterialTheme.typography.bodyLarge) },
+            supportingContent = {
+                Column {
+                    Text("${medicineData.medicine.dosage} - $timeText", style = MaterialTheme.typography.bodyLarge)
+                    if (pillsLeftText.isNotEmpty()) {
+                        Text(pillsLeftText, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            },
             trailingContent = {
-                if (medicineData.isTakenToday) {
-                    Text("✓ Taken", color = MaterialTheme.colorScheme.primary)
-                } else {
-                    when (takenAction) {
-                        TakenAction.QUICK_TAP -> {
-                            Button(
-                                onClick = onMarkAsTaken,
-                                shape = MaterialTheme.shapes.small,
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                            ) {
-                                Icon(Icons.Default.Check, contentDescription = "Mark as taken")
-                                Spacer(Modifier.width(4.dp))
-                                Text("Taken")
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (medicineData.isTakenToday) {
+                        Text("✓ Taken", color = MaterialTheme.colorScheme.primary)
+                    } else {
+                        when (takenAction) {
+                            TakenAction.QUICK_TAP -> {
+                                Button(
+                                    onClick = onMarkAsTaken,
+                                    shape = MaterialTheme.shapes.small,
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                                ) {
+                                    Icon(Icons.Default.Check, contentDescription = "Mark as taken")
+                                    Spacer(Modifier.width(4.dp))
+                                    Text("Taken")
+                                }
+                            }
+                            TakenAction.PHOTO_MODE -> {
+                                IconButton(onClick = onScanPill) {
+                                    Icon(Icons.Default.PhotoCamera, contentDescription = "Scan pill", tint = MaterialTheme.colorScheme.primary)
+                                }
                             }
                         }
-                        TakenAction.PHOTO_MODE -> {
-                            IconButton(onClick = onScanPill) {
-                                Icon(Icons.Default.PhotoCamera, contentDescription = "Scan pill", tint = MaterialTheme.colorScheme.primary)
-                            }
+                        Spacer(Modifier.width(8.dp))
+                        IconButton(onClick = onSnooze) {
+                            Icon(Icons.Default.Snooze, contentDescription = "Snooze")
+                        }
+                        IconButton(onClick = onSkip) {
+                            Icon(Icons.Default.SkipNext, contentDescription = "Skip")
                         }
                     }
                 }

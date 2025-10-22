@@ -8,8 +8,11 @@ data class DoseLog(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val medicineId: Int,
     val scheduledTime: Long,
-    val takenTime: Long? = null,
+    val takenTime: Long,
     val wasMissed: Boolean,
-    val imageHash: String? = null,
-    val status: String = "TAKEN" // Default to TAKEN for existing logs
+    val status: String? = null, // e.g., "snoozed", "taken"
+    val notes: String? = null,
+    val mood: String? = null,
+    val photoUri: String? = null,
+    val imageHash: String? = null
 )
